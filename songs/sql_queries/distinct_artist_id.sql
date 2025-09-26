@@ -1,0 +1,1 @@
+SELECT artist_id FROM dim_artist GROUP BY artist_id;

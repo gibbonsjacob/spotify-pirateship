@@ -1,0 +1,17 @@
+
+
+.venv
+__pycache__
+*.pkl
+*.pickle
+
+songs/songs_management.db
+
+
+/test_outputs/
+.env
+.cache
+client_secret.json
+download_music.bat
+/old_files/
+/song_downloads_raw/

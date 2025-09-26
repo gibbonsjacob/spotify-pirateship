@@ -1,0 +1,1 @@
+SELECT track_id FROM dim_song GROUP BY track_id;

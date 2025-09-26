@@ -1,0 +1,1 @@
+SELECT album_id FROM dim_album GROUP BY album_id;
