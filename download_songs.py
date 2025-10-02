@@ -1,3 +1,4 @@
+import argparse
 import re
 import requests
 from pathlib import Path
@@ -6,15 +7,22 @@ import os
 from dotenv import load_dotenv
 # import get_song_features
 import get_video_url
+import browser_cookie3 
+import pickle
 
 
 
 
 
+def get_cookies() -> Path:
+    cj = browser_cookie3.chrome(domain_name='youtube.com')
 
-
-
-
+    # Save to a file in Netscape/Mozilla format for yt-dlp
+    
+    with open('cookies.txt', 'w') as f:
+        for cookie in cj:
+            f.write(f"{cookie.domain}\tTRUE\t{cookie.path}\tFALSE\t{cookie.expires}\t{cookie.name}\t{cookie.value}\n")
+    return Path('cookies.txt')
 
 
 
@@ -48,19 +56,13 @@ def song_mp3_file_exists(base_directory, artist, song_name):
 
 def download_audio(youtube_url: str, save_path: str):
     ydl_opts = {
-        'format': 'bestaudio/best', 
-        'outtmpl': f"{save_path}.%(ext)s",
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'quiet': True,
-        # 'no_warnings': True
-        'verbose': True
+        'format': 'bestaudio', 
+        'outtmpl': f"{save_path}.mp3",
+        'quiet': True
     }   
 
     try:
+        
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])
@@ -76,36 +78,27 @@ def download_audio(youtube_url: str, save_path: str):
                 'exception': e 
                 }
 
-def main():
-    # get playlist to iterate 
-    # loop over playlist to find all songs 
-    # check if file for song already exists following naming convention <song_name> - <artist_name>.mp3
-    # if file exists skip
-    # if file does not exist then download file and put in a folder called "songs to move" 
+def main(args):
 
-
-
+    if args.track:
+        d = download_audio(args.track, Path('Downloads/'))
     
-   
-    for song in songs:
-        song_title = song['title']
-        song_artist = song['artist']
+        print(d)
+    if args.get_cookies:
+        print(f"Full cookies.txt path: {get_cookies().absolute().as_posix()}")
 
-        # we should change this to check a status in the db rather than doing it like this
-        
-        existence = song_mp3_file_exists(base_dir, song_artist, song_title)
-
-        if not song_mp3_file_exists(base_dir, song_artist, song_title):
-            url = get_video_url.search(search_query=f"{song_title} - {song_artist}")
-            # print(f"title: {title}")    
-            # print(f"song_artist: {song_artist}")    
-            # print(f"url: {url}")   
-            
-            if download_audio(song_title, song_artist, url):
-                print(f"{song_title} downloaded successfully") 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Download an mp3 file from a given youtube URL')
+    parser.add_argument('--track', action='store_true', help="Download a youtube video to a local mp3 file")
+    parser.add_argument('--get-cookies', action='store_true', help='Creates a cookies.txt file from Youtube')
+
+    args = parser.parse_args()
+
+    main(args)
+
+
+
 
 
 
