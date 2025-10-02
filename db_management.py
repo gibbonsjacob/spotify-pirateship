@@ -1,8 +1,6 @@
-from optparse import Values
-from turtle import onclick
+
 import pandas as pd
 import sqlite3
-from dotenv import load_dotenv
 import numpy as np 
 from datetime import datetime
 
@@ -14,8 +12,12 @@ class Database:
         self.name = name
         self.connection = None
         self.cursor = None 
+        self._ensure()
 
 
+
+
+            
 
     def _initialize(self) -> tuple[sqlite3.Connection, sqlite3.Cursor]: 
         try:
@@ -32,7 +34,16 @@ class Database:
         self.connection.close()
 
 
-    def execute_sql(self, sql: str): 
+    def _ensure(self) -> None:
+        # Ensures the db file exists, and creates it if not
+        try:
+            self.connection, self.cursor = self._initialize()
+            if not self.connection:
+                return
+        finally:
+            self._kill()
+
+    def execute_sql(self, sql: str) -> None: 
         
         try:
             self.connection, self.cursor = self._initialize()
@@ -43,7 +54,7 @@ class Database:
 
         except Exception as e: 
             print(f"An error occurred while running query: {e}")
-
+            print(sql)
             return False
         
         finally: 
