@@ -1,16 +1,19 @@
-from errno import errorcode
 import os
 import pickle
 import google
 import json
+import argparse
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 
-def search(search_query: str) -> list:
-    client_secrets_file = "client_secret.json"
-    scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 
+client_secrets_file = "client_secret.json"
+scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
+
+
+def search(search_query: str) -> list:
+    
     creds = None
 
     # Token file stores the user's access and refresh tokens
@@ -64,5 +67,29 @@ def search(search_query: str) -> list:
                 'errors_list': errors_list,
                 'context': context
                 }
-              
 
+def main(args):
+
+    if args.auth:
+        # Go through flow
+        flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
+            client_secrets_file, scopes
+        )
+        creds = flow.run_local_server(port=0)
+
+        # Save the credentials for next time
+        with open("token.pickle", "wb") as token:
+            pickle.dump(creds, token)  
+
+
+    search()       
+
+
+if __name__ == '__main__': 
+
+    parser = argparse.ArgumentParser(description='Authenticate project with Google')
+    parser.add_argument('--auth',   action="store_true", help="Establish authentication with Google Project")
+
+    args = parser.parse_args()
+
+    main(args)
