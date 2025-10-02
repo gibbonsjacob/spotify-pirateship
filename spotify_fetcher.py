@@ -2,21 +2,21 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 import os 
-
+import argparse
+import json
 
 def load_env_vars():
     load_dotenv()
     spotify_client_id = os.getenv('spotify_client_id')
     spotify_client_secret = os.getenv('spotify_client_secret')
     spotify_redirect_url = os.getenv('spotify_redirect_url')
-    base_dir = os.getenv('songs_base_directory')
-    return spotify_client_id, spotify_client_secret, spotify_redirect_url, base_dir
+    return spotify_client_id, spotify_client_secret, spotify_redirect_url
 
 
 
 ###### CONFIGS ######
 
-spotify_client_id, spotify_client_secret, spotify_redirect_url, base_dir = load_env_vars()
+spotify_client_id, spotify_client_secret, spotify_redirect_url = load_env_vars()
 scopes = """
         user-read-private
         user-read-email
@@ -39,7 +39,7 @@ album_id_limit = 20
 
 
 
-
+######################################################
 
 
 def get_user_playlists():
@@ -114,16 +114,48 @@ def get_artist_details(artist_ids: list):
 
 
 
-def main():
+def main(args):
+    
+    print(args)
+
+    if args.get_playlists:
+    
+        results = get_user_playlists(sp)
+
+        for r in results: 
+            print(r)
+
+
+    if args.artist: 
+        print(get_artist_details([args.artist]))
+
+
+    if args.album: 
+        print(get_album_details([args.album]))
+
+
+
+    if args.playlist_details: 
+        print(f"Writing playlist details to {args.playlist_details}.json")
+        with open(f"{args.playlist_details}.json", 'w') as f: 
+            json.dumps(get_song_details(args.playlist_details))
+    
+    
     
 
-    
-    playlists = get_user_playlists(sp)
-    # playlist_link = "https://open.spotify.com/playlist/7v7C0OvXqzh5g27fva7c3V?si=cb643a32f7c7466e"
 
-    playlist_to_iterate = [p for p in playlists if p.get('name') == 'dezyDUBBBBB'][0]
-    raw_track_payload = [song for song in get_song_details(sp, playlist_to_iterate.get('url'))]
-    
-    
-    
-    return raw_track_payload
+
+
+
+if __name__ == '__main__': 
+
+    parser = argparse.ArgumentParser(description='Get Spotify API Information')
+    parser.add_argument('--artist',   action="store_true", help="Provide an Artist ID to search for")
+    parser.add_argument('--album',   action="store_true", help="Provide an Album ID to search for")
+    parser.add_argument('--playlist-details',   action="store_true", help="Provide a playlist ID to get data about all songs in the playlist")
+    parser.add_argument('--get-playlists',   action="store_true", help="Running this will return the name of all user playlists from Spotify")
+
+
+    args = parser.parse_args()
+
+    main(args)
