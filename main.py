@@ -9,7 +9,6 @@ import uuid
 from db_management import Database
 from pathlib import Path
 from download_songs import download_audio
-# import ML_genre_classifier.genre_predictor as genre_predictor
 
 
 
@@ -17,8 +16,8 @@ from download_songs import download_audio
 ############################ CONFIGS ##############################
 
 playlist_of_interest = 'dezyDUBBBBB'
-min_genre_confidence_val = 0.7
 
+## to get this, run spotify_fetcher.get_user_playlists() or copy from Spotify
 
 
 ###################################################################
@@ -198,8 +197,8 @@ def main():
 
     for table, existence in table_existence.items():
         if not existence:
-            #if table doesn't exist, run the create table sql 
-            #this should only ever hit the very first time we run
+            # if table doesn't exist, run the create table sql 
+            # this should only ever hit the very first time we run
             songs_db.execute_sql(tables[table])
 
 
@@ -399,7 +398,7 @@ def main():
                     "batch_id": batch_id,
                     "track_id": row['track_id'],
                     "error_ts": download_ts,
-                    "error_message": download_error,
+                    "error_message": str(download_error),
                     "error_code": "DownloadFailed",
                     "context": None,
                     "stage": "Download"
