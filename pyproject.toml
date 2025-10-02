@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "browser-cookie3>=0.20.1",
     "google-api-python-client>=2.181.0",
     "google-auth-oauthlib>=1.2.2",
     "librosa>=0.11.0",
@@ -17,6 +18,6 @@ dependencies = [
     "spotipy>=2.25.1",
     "tensorflow>=2.20.0",
     "tensorflow-hub>=0.16.1",
-    "yt-dlp[default]>=2025.9.23",
+    "yt-dlp>=2025.9.26",
 ]
 
