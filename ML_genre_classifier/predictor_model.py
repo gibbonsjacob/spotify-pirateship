@@ -31,7 +31,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-
+songs_master = Path(r"D:/Songs")
 embedding_file = Path("ML_genre_classifier/song_embeddings.pkl")
 classifier_file = Path("ML_genre_classifier/subgenre_classifier.pkl")
 min_genre_confidence_val = 0.7
@@ -325,7 +325,7 @@ class GenrePredictor:
 
 
 
-def main(predictor: GenrePredictor, args, songs_master: Path = Path(r"D:/Songs")): 
+def main(predictor: GenrePredictor, args, songs_master: Path = songs_master): 
 
     if args.embed:
         print('Starting new Embedding session')
@@ -343,7 +343,8 @@ def main(predictor: GenrePredictor, args, songs_master: Path = Path(r"D:/Songs")
                                      n_estimators = 200)
         predictor.save_training_model()
 
-    predictor.run()
+    if args.run: 
+        predictor.run()
 
 
 if __name__ == '__main__': 
@@ -351,7 +352,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Work with ML Model to Predict Genre of an mp3 file')
     parser.add_argument('--train', action="store_true", help="If true model will retrain itself, otherwise this step will be skipped")
     parser.add_argument('--embed', action="store_true", help="If true model will look for new songs to embed to be used in training")
-    # parser.add_argument('--', action="store_true", help="If true model will retrain itself, otherwise this step will be skipped")
+    parser.add_argument('--run', action="store_true", help="If true model will run predictions for tracks found in run()")
+
     
     predictor = GenrePredictor(embedding_file=embedding_file, 
                                classifier_file=classifier_file)
