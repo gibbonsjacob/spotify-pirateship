@@ -51,32 +51,35 @@ def song_mp3_file_exists(base_directory, artist, song_name):
 
 
 
-
-
-
 def download_audio(youtube_url: str, save_path: str):
     ydl_opts = {
-        'format': 'bestaudio', 
-        'outtmpl': f"{save_path}.mp3",
-        'quiet': True
-    }   
+        'format': 'bestaudio/best',
+        'outtmpl': f"{save_path}.%(ext)s",
+        'quiet': True,
+        'postprocessors': [
+            {
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',  # kbps
+            },
+        ],
+        # Force Rekordbox-safe format
+        'postprocessor_args': [
+            '-ar', '44100',   # 44.1 kHz sample rate
+            '-ac', '2',       # stereo
+        ],
+    }
 
     try:
-        
-
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])
 
-        return {
-                'download_status': True,
-                'exception': None 
-                }
+        return {'download_status': True, 'exception': None}
     except Exception as e:
+        print(f"Error downloading: {youtube_url}")
         print(e)
-        return {
-                'download_status': False,
-                'exception': e 
-                }
+        return {'download_status': False, 'exception': e}
+
 
 def main(args):
 
