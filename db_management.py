@@ -53,8 +53,7 @@ class Database:
             
 
         except Exception as e: 
-            print(f"An error occurred while running query: {e}")
-            print(sql)
+            print(f"An error occurred while executing query: {e}")
             return False
         
         finally: 
@@ -71,8 +70,7 @@ class Database:
             return pd.DataFrame(results, columns=columns)
 
         except Exception as e: 
-            print(f"An error occurred while running query: {e}")
-            print(sql)
+            print(f"An error occurred while running select query: {e}")
             return False
         
         finally: 
