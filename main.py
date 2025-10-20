@@ -1,3 +1,4 @@
+from importlib.metadata import DeprecatedNonAbstract
 from re import search
 import sqlite3
 import datetime
@@ -8,9 +9,8 @@ import json
 import uuid
 from db_management import Database
 from pathlib import Path
-from download_songs import download_audio
-
-
+from download_songs import download_audio, song_mp3_file_exists
+from file_mover import FileMover
 
 
 ############################ CONFIGS ##############################
@@ -188,6 +188,9 @@ def main():
 
     ## Database stuff 
     songs_db = Database('songs/songs_management.db')
+    mover = FileMover()
+
+
     tables_path = Path('songs/table_defs/')
 
     #key is the table name, value is the CREATE TABLE sql statement in the file
@@ -200,6 +203,11 @@ def main():
             # if table doesn't exist, run the create table sql 
             # this should only ever hit the very first time we run
             songs_db.execute_sql(tables[table])
+
+
+
+
+
 
 
 
@@ -447,29 +455,13 @@ def main():
     songs_db.execute_sql(batch_insert_sql)
     
 
+   ###############################################################
+    ## Next we'll handle our file location logic
+    ## First part of that is handling initial downloads, which we can steal fact_song_download for
 
-
-
-
-
-
-    ########################################################
-    
-    ## Next we can apply our ML algorithm we wrote to classify each mp3 file to a genre
-    ## This will tell us what folder the file needs to go to
-    
-
-
-
-
-   
-
-
-
-    ##### All that's left to do is move files! We'll just do this based on our genre assignment
-    ##### we should also decide on some way to check genres (this may be manual) and also rerun the training if enough new songs have been added or time has passed
-    
-
+    song_location_raw = fact_song_download.apply(lambda row: mover.handle_initial_download(row), axis=1).apply(pd.Series)
+    fsflc_insert_sql = songs_db.build_insert_into_sql('fact_song_file_location_change', song_location_raw)
+    songs_db.execute_sql(fsflc_insert_sql)
 
 
 
@@ -484,7 +476,8 @@ def delete_tables():
     # songs_db.execute_sql("DROP TABLE IF EXISTS dim_song")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_batch_execution")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_error_log")
-    songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_download")
+    songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_file_location_change")
+    songs_db.execute_sql("DROP TABLE IF EXISTS dim_song_file_location")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_features")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_youtube_search")
     # songs_db.execute_sql("DROP TABLE IF EXISTS xref_artist_genres") 
@@ -517,6 +510,6 @@ def create_tables():
 
 
 if __name__ == "__main__":
-    main()
-    # create_tables()
+    # main()
+    create_tables()
     # delete_tables()
