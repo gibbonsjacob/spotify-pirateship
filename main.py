@@ -1,5 +1,7 @@
 from importlib.metadata import DeprecatedNonAbstract
 from re import search
+import re 
+import unicodedata
 import sqlite3
 import datetime
 import pandas as pd
@@ -177,6 +179,29 @@ def parse_song_to_artist_map(items: list[dict]) -> pd.DataFrame:
     df = pd.DataFrame(records, columns=["track_id", "artist_id"]).drop_duplicates()
     return df
 
+
+def normalize_filename(raw_name: str) -> str:
+    
+    windows_reserved = {
+        "CON", "PRN", "AUX", "NUL",
+        *(f"COM{i}" for i in range(1, 10)),
+        *(f"LPT{i}" for i in range(1, 10)),
+    }
+    name = unicodedata.normalize("NFKD", raw_name)
+    name = re.sub(r"[\x00-\x1f\x7f]", "", name)
+
+    forbidden = r'[<>:"/\\|?*\']'
+    name = re.sub(forbidden, "", name)
+    name = re.sub(r"[^A-Za-z0-9 ._-]", "", name)
+    name = name.strip(" .")
+
+    if not name:
+        name = "file"
+    base = name.split(".")[0].upper()
+    if base in windows_reserved:
+        name = f"{name}_"
+
+    return name[:255]
 
 
 
@@ -378,9 +403,10 @@ def main():
     download_successes = []
     for index, row in stg_song_download.iterrows():
         try: 
+            name = normalize_filename(row['search_query'])
             root = Path(
                 f"song_downloads_raw/{datetime.datetime.today().strftime('%m.%d.%Y')}"
-            ).joinpath(row['search_query'])
+            ).joinpath(name)
             download_path = root.absolute().as_posix()
             file_path = download_path + row['file_format']
             download_ts =  datetime.datetime.now()
@@ -464,11 +490,34 @@ def main():
     songs_db.execute_sql(fsflc_insert_sql)
 
 
+    dim_song_location = song_location_raw.copy().drop(columns=['source_path'])
+    dim_col_order = [
+                'track_id',
+                'current_path', 
+                'file_hash',  
+                'last_changed', 
+                'last_change_reason', 
+                'last_confidence'
+                ] 
+    
+    dim_song_location.rename(columns={
+                                'target_path': 'current_path',
+                                'changed_at': 'last_changed',
+                                'change_reason': 'last_change_reason', 
+                                'confidence': 'last_confidence' 
+                                }, inplace=True)
+    dim_song_location = dim_song_location[dim_col_order]
+    dsfl_insert_sql = songs_db.build_insert_into_sql('dim_song_file_location', dim_song_location)
+    songs_db.execute_sql(dsfl_insert_sql)
+
 
 
 
 def delete_tables():
-    """ Just using this function for db management as needed"""
+    # Just using this function for db management as needed
+    
+    
+    
     songs_db = Database('songs/songs_management.db')
     # # print(songs_db.select_sql("select * from sqlite_master"))
     # songs_db.execute_sql("DROP TABLE IF EXISTS dim_album")
@@ -476,8 +525,8 @@ def delete_tables():
     # songs_db.execute_sql("DROP TABLE IF EXISTS dim_song")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_batch_execution")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_error_log")
-    songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_file_location_change")
-    songs_db.execute_sql("DROP TABLE IF EXISTS dim_song_file_location")
+    # songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_file_location_change")
+    # songs_db.execute_sql("DROP TABLE IF EXISTS dim_song_file_location")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_song_features")
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_youtube_search")
     # songs_db.execute_sql("DROP TABLE IF EXISTS xref_artist_genres") 
@@ -487,7 +536,7 @@ def delete_tables():
     # songs_db.execute_sql("DROP TABLE IF EXISTS fact_genre_assignment")
 
     # songs_db.execute_sql('delete from fact_song_download where download_id >= 271')
-
+    songs_db.execute_sql('delete from fact_song_download where insert_date = "2025-12-08"')
 
 
 
@@ -510,6 +559,9 @@ def create_tables():
 
 
 if __name__ == "__main__":
+    
+    change_spotify_to_computer()
+
     # main()
-    create_tables()
+    # create_tables()
     # delete_tables()
