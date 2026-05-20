@@ -109,15 +109,8 @@ def get_artist_details(artist_ids: list):
     return results
 
 
-
-    
-
-
-
 def main(args):
     
-    print(args)
-
     if args.get_playlists:
     
         results = get_user_playlists(sp)
@@ -141,14 +134,7 @@ def main(args):
             json.dumps(get_song_details(args.playlist_details))
     
     
-    
-
-
-
-
-
 if __name__ == '__main__': 
-
     parser = argparse.ArgumentParser(description='Get Spotify API Information')
     parser.add_argument('--artist',   action="store_true", help="Provide an Artist ID to search for")
     parser.add_argument('--album',   action="store_true", help="Provide an Album ID to search for")
