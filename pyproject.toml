@@ -14,11 +14,11 @@ dependencies = [
     "pydub>=0.25.1",
     "python-dotenv>=1.1.1",
     "rapidfuzz>=3.14.1",
-    "shazamio>=0.8.1",
+    
     "soundfile>=0.13.1",
     "spotipy>=2.25.1",
     "tensorflow>=2.20.0",
     "tensorflow-hub>=0.16.1",
-    "yt-dlp>=2025.9.26",
+    "yt-dlp>=2026.2.4",
 ]
 

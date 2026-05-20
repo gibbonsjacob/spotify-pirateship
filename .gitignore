@@ -1,5 +1,5 @@
 
-
+.gitignore
 .venv
 __pycache__
 *.pkl
@@ -8,10 +8,14 @@ __pycache__
 songs/songs_management.db
 
 
-/test_outputs/
+test_outputs/
 .env
 .cache
 client_secret.json
 download_music.bat
-/old_files/
-/song_downloads_raw/
+old_files/
+song_downloads_raw/
+youtube_cookies.txt
+*test*
+
+misc/
