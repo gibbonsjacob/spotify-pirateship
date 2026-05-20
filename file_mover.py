@@ -96,7 +96,7 @@ class FileMover:
             "target_path": str(row['downloaded_to_file_path']),
             "file_hash": file_hash,
             "change_reason": "Initial Download", 
-            "confidence": 0.0,
+            "confidence": -1,
             "changed_at": datetime.now()
         }
 
@@ -149,14 +149,19 @@ class FileMover:
         dim_records = []
         fact_records = []
         no_match_files = {}
+        existing_paths = set(Path(p).resolve() for paths in dim_song_file_location["current_path"] for p in paths)
 
         # Iterate over D:/Songs to populate dim and manual classification fact records
         for genre_folder in cls.classified_root.iterdir():
             if not genre_folder.is_dir():
                 continue
+ 
             for file_path in genre_folder.glob("*.mp3"):
                 try:
+                    if file_path.resolve() in existing_paths:
+                        continue 
                     file_name = file_path.name
+                    print(file_path.resolve())
                     track_id = file_to_track.get(file_name)
                     if track_id:
 

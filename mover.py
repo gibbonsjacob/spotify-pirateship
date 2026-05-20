@@ -12,6 +12,21 @@ def ensure_list(s):
         return [s]
 
 def main():
+
+
+    # need to figure out how / why dupes are being created and written still
+    # data cleanup is needed so badly here. probably need to drop the tables and start over
+    # it seems like everything is pretty much working as intended,
+    # but dupes are coming in somewhere and we need to solve
+
+
+    ## I think it's something to do with the list of paths. 
+    ## Right now i think every file in D:/Songs is getting a new record
+    ## every run rather than only when it actually moved
+
+
+
+
     mover = FileMover()
     songs_db = Database(Path('songs/songs_management.db'))
     
@@ -28,25 +43,25 @@ def main():
 
     ###### Step 1: Manual classifications ######
 
-    ### to fix we need to handle the list vs. raw string for file paths
-    ### Note that some of the paths add a trailing ] because of .name
-
 
 
     dim_df, fact_df, no_matches = mover.detect_manual_classifications(dim_song_file_location)
-    fact_df.to_csv('fact.csv')
-    # Write out no matches for later inspection
+
+
     with open("test_outputs/no_matches.json", "w") as f:
         json.dump(no_matches, f, indent=2)
 
-    # Process all records, confident or not
+
+
     for track_id, group in dim_df.groupby("track_id", group_keys=False):
         all_paths = sorted(set(group["current_path"]))  # merge all paths
         if not isinstance(all_paths, list):
             all_paths = [all_paths]
         merged_path_json = json.dumps(all_paths)
 
-        # Take the first record as template, replace current_path with JSON list
+
+        # Even though we store a list, we don't actually care about
+        # ALL the paths that exist. We only care that *one of them* exists
         best_record = group.iloc[0].copy()
         best_record["current_path"] = merged_path_json
         dim_records.append(best_record.to_dict())
@@ -84,7 +99,11 @@ def main():
 
         to_move['last_changed'] = datetime.datetime.now()
         to_move['last_change_reason'] = 'ML Classification'
-        to_move = to_move[to_move['target_path'] != to_move['current_path']]
+        to_move = to_move[to_move.apply(
+            lambda row: str(Path(row["current_path"][0])) != row["target_path"] and
+                        not Path(row["target_path"]).exists(),
+            axis=1
+        )]
 
         movements = []
         for _, row in to_move.iterrows():
